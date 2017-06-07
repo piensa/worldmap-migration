@@ -3,7 +3,8 @@
 #############################################################################
 
 echo "\nCreate view for bbox in legacy database"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
+sudo -u $USER PGPASSWORD=$DB_PW \
+psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "CREATE OR REPLACE VIEW maps_layer_bbox AS
         SELECT id,
             CAST(bbox[1] AS float) AS bbox_x0,
@@ -16,8 +17,11 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
             AS bbox
     FROM maps_layer) AS seq"
 
+#############################################################################
+
 echo "\nCreate new layers table views with bbox in legacy database"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
+sudo -u $USER PGPASSWORD=$DB_PW \
+psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "CREATE OR REPLACE VIEW augmented_maps_layer AS
         SELECT * FROM maps_layer
         INNER JOIN
