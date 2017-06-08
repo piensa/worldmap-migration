@@ -30,6 +30,8 @@ sudo -u $USER psql $NEW_DB -c \
         date_joined)
     FROM STDIN CSV"
 
+#############################################################################
+
 echo "\nReset user sequence"; do_dash
 sudo -u $USER psql $NEW_DB -c \
     "SELECT setval(pg_get_serial_sequence('people_profile', 'id'),

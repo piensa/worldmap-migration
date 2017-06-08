@@ -62,3 +62,31 @@ do_hr
 #############################################################################
 
 source layers.sh
+
+#############################################################################
+do_hr
+echo "Creating default user for Admin"
+do_hr
+#############################################################################
+
+echo "from geonode.people.models import Profile;
+     Profile.objects.create_superuser('admin', 'admin@worldmap.com', 'admin')" | \
+python $GEONODE_PATH/manage.py shell
+
+python $GEONODE_PATH/manage.py loaddata fixtures/default_oauth_apps.json
+
+#############################################################################
+do_hr
+echo "Migration for maps tables"
+do_hr
+#############################################################################
+
+source maps.sh
+
+#############################################################################
+do_hr
+echo "Migration for auth tables"
+do_hr
+#############################################################################
+
+source auth.sh

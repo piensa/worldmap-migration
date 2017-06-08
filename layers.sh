@@ -76,7 +76,7 @@ psql $NEW_DB -c 'COPY layers_layer (resourcebase_ptr_id, title_en, abstract_en, 
 
 #############################################################################
 
-echo "\n Creating geowebcache url for layers"; do_dash
+echo "\nCreating geowebcache url for layers"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $NEW_DB -c \
     "copy (select resourcebase_ptr_id, 'tiles', 'Tiles', 'image/png', 'image', CONCAT('$GEOSERVER_URL', 'gwc/service/gmaps?layers=', typename, '&zoom={z}&x={x}&y={y}&format=image/png8') FROM layers_layer) to stdout with csv" | \
@@ -85,10 +85,29 @@ psql $NEW_DB -c "copy base_link(resource_id, extension, name, mime, link_type, u
 
 #############################################################################
 
-echo "\n Copy items to wm_extra_layerstats table"; do_dash
+echo "\nCopy items to wm_extra_layerstats table"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy (SELECT augmented_maps_layer.id, maps_layerstats.visits, maps_layerstats.uniques, maps_layerstats.downloads, maps_layerstats.last_modified FROM augmented_maps_layer, maps_layerstats WHERE augmented_maps_layer.id = maps_layerstats.layer_id) to stdout csv" | \
 sudo -u $USER \
 psql $NEW_DB -c "copy wm_extra_layerstats (layer_id, visits, uniques, downloads, last_modified) from stdin csv"
 
+#############################################################################
+
+echo "\nCopy django_guardian permissions"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
+    "copy(
+        SELECT user_id, 56, CAST(augmented_maps_layer.id AS VARCHAR) as resourcebase_id,
+            CASE
+                WHEN role_id=4 THEN unnest(array[166, 169, 171])
+                WHEN role_id=5 THEN unnest(array[166, 167, 168, 169, 170, 171, 172, 173])
+                WHEN role_id=6 THEN unnest(array[166, 167, 169, 171, 172, 173])
+            END AS permission_id
+        FROM core_userobjectrolemapping, augmented_maps_layer
+        WHERE augmented_maps_layer.id = core_userobjectrolemapping.object_id
+            AND core_userobjectrolemapping.object_ct_id=18
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV
+    "
