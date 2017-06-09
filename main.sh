@@ -1,3 +1,5 @@
+#!/bin/bash
+
 do_hr() {
    echo "==============================================================="
 }
@@ -5,6 +7,20 @@ do_hr() {
 do_dash() {
    echo "---------------------------------------------------------------"
 }
+
+# Parsing inputs.
+for i in "$@"
+do
+case $i in
+    -t|--tables)
+    TABLES=true
+    shift # past argument with no value
+    ;;
+    *)
+            # unknown option
+    ;;
+esac
+done
 
 #############################################################################
 do_hr
@@ -36,6 +52,10 @@ do_hr
 #############################################################################
 sudo -u $USER PGPASSWORD=$DB_PW psql -c "CREATE DATABASE $NEW_DB;"
 
+sudo -u $USER PGPASSWORD=$DB_PW \
+psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST -d $NEW_DB -c \
+	"CREATE EXTENSION postgis;"
+
 #############################################################################
 do_hr
 echo "Executing geonode migrations"
@@ -46,6 +66,11 @@ source $ENV_PATH/bin/activate
 python $GEONODE_PATH/manage.py makemigrations
 python $GEONODE_PATH/manage.py migrate account --noinput
 python $GEONODE_PATH/manage.py migrate
+
+# If there are only tables creation only.
+if [ $TABLES ]; then
+	exit
+fi
 
 #############################################################################
 do_hr

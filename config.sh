@@ -8,4 +8,4 @@ export GEONODE_PATH=/code/worldmap
 export GEOSERVER_URL=http://worldmap/geoserver/
 export ENV_PATH=/venvs/worldmap
 export GEOSERVER_STYLES_PATH=/Users/jorge/Desktop
-export DATABASE_URL=postgres://$DB_USER:$DB_PW@$DB_HOST:5432/$NEW_DB
+export DATABASE_URL=postgis://$DB_USER:$DB_PW@$DB_HOST:5432/$NEW_DB
