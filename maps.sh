@@ -91,3 +91,22 @@ sudo -u $USER psql $NEW_DB -c \
 	"copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
 		FROM STDIN CSV
 	"
+
+#############################################################################
+
+echo "\nCopy tagged items from maps"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
+    "copy(
+        SELECT taggit_taggeditem.id,
+               taggit_taggeditem.tag_id,
+               augmented_maps_map.id as object_id,
+               56 as content_type_id
+        FROM taggit_taggeditem,
+             augmented_maps_map
+        WHERE taggit_taggeditem.object_id = augmented_maps_map.base_id
+        AND tag_id in (SELECT id from taggit_tag)
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy taggit_taggeditem(id, tag_id, object_id, content_type_id)
+        FROM STDIN CSV
+    "

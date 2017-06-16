@@ -93,6 +93,15 @@ if [ $TABLES ]; then
     exit
 fi
 
+echo "\ntaggit_tag table migration"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
+    "copy (
+        select id,
+               name,
+               slug
+        FROM taggit_tag)
+        to stdout with csv" | \
+sudo -u $USER psql $NEW_DB -c "copy taggit_tag (id, name, slug) from stdin csv"
 
 #############################################################################
 do_hr
