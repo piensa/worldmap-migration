@@ -69,9 +69,18 @@ python $GEONODE_PATH/manage.py migrate
 
 #############################################################################
 do_hr
+echo "Migration for users table"
+do_hr
+#############################################################################
+
+source users.sh
+
+#############################################################################
+do_hr
 echo "Creating default user for Admin"
 do_hr
 #############################################################################
+
 
 echo "from geonode.people.models import Profile;
      Profile.objects.create_superuser('admin', 'admin@worldmap.com', 'admin')" | \
@@ -81,16 +90,9 @@ python $GEONODE_PATH/manage.py loaddata fixtures/default_oauth_apps.json
 
 # If there are only tables creation only.
 if [ $TABLES ]; then
-	exit
+    exit
 fi
 
-#############################################################################
-do_hr
-echo "Migration for users table"
-do_hr
-#############################################################################
-
-source users.sh
 
 #############################################################################
 do_hr
