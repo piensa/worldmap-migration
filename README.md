@@ -17,4 +17,8 @@ Usage
 	chmod +x main.sh
 	source main.sh -d $OLD_DB
 
-**Note.** Make sure you have loaded your database dump
+**Notes**
+
+- Make sure you have loaded your database dump.
+
+- Make sure you have the geoserver styles tables within files.
