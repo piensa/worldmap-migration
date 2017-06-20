@@ -8,6 +8,8 @@ do_dash() {
    echo "---------------------------------------------------------------"
 }
 
+OLD_DB=worldmap
+
 # Parsing inputs.
 for i in "$@"
 do
@@ -16,6 +18,11 @@ case $i in
     TABLES=true
     shift # past argument with no value
     ;;
+    -d|--database)
+    OLD_DB="$2"
+    shift # past argument
+    ;;
+
     *)
             # unknown option
     ;;

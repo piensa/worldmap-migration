@@ -3,7 +3,6 @@ export DB_USER=worldmap
 export DB_PW=worldmap
 export DB_HOST=localhost
 export NEW_DB=worldmap_new
-export OLD_DB=test_db
 export GEONODE_PATH=/code/worldmap
 export GEOSERVER_URL=http://worldmap/geoserver/
 export ENV_PATH=/venvs/worldmap
