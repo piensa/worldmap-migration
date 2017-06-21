@@ -7,9 +7,9 @@ Usage
 
 1. Make sure to load the sql dump.
 
-	psql -U $DB_USER -c "CREATE DATABASE $OLD_DB"
+	sudo -u $DB_USER psql -c "CREATE DATABASE $OLD_DB"
 
-	psql -U $DB_USER -d $OLD_DB < $SQL_DUMP_PATH
+	sudo -u $DB_USER psql -d $OLD_DB < $SQL_DUMP_PATH
 
 
 2. Run migration scripts
