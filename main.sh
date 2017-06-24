@@ -35,7 +35,7 @@ echo "Variables definitions"
 do_hr
 #############################################################################
 
-source config.sh
+source scripts/config.sh
 
 # Settings all shell files as executables.
 chmod +x *.sh
@@ -80,7 +80,7 @@ echo "Migration for users table"
 do_hr
 #############################################################################
 
-source users.sh
+source scripts/users.sh
 
 #############################################################################
 do_hr
@@ -116,7 +116,7 @@ echo "Executing migration for layers tables"
 do_hr
 #############################################################################
 
-source layers.sh
+source scripts/layers.sh
 
 #############################################################################
 do_hr
@@ -124,7 +124,7 @@ echo "Migration for maps tables"
 do_hr
 #############################################################################
 
-source maps.sh
+source scripts/maps.sh
 
 #############################################################################
 do_hr
@@ -132,7 +132,7 @@ echo "Migration for auth tables"
 do_hr
 #############################################################################
 
-source auth.sh
+source scripts/auth.sh
 
 #############################################################################
 do_hr
@@ -140,4 +140,4 @@ echo "Migration for styles tables"
 do_hr
 #############################################################################
 
-source styles.sh
+source scripts/styles.sh
