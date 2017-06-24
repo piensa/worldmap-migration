@@ -35,7 +35,7 @@ echo "Variables definitions"
 do_hr
 #############################################################################
 
-source scripts/config.sh
+source config.sh
 
 # Settings all shell files as executables.
 chmod +x *.sh
@@ -140,4 +140,4 @@ echo "Migration for styles tables"
 do_hr
 #############################################################################
 
-source scripts/styles.sh
+#source scripts/styles.sh
