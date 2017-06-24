@@ -140,4 +140,4 @@ echo "Migration for styles tables"
 do_hr
 #############################################################################
 
-#source scripts/styles.sh
+source scripts/styles.sh
