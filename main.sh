@@ -140,4 +140,7 @@ echo "Migration for styles tables"
 do_hr
 #############################################################################
 
-source scripts/styles.sh
+if [ -f $STYLES_PATH ]; then
+    echo "Sql styles dump found..."
+    source scripts/styles.sh
+fi

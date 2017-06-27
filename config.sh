@@ -8,4 +8,4 @@ export GEOSERVER_URL=http://worldmap/geoserver/
 export ENV_PATH=/venvs/worldmap
 export GEOSERVER_STYLES_PATH=/Users/jorge/Desktop
 export DATABASE_URL=postgis://$DB_USER:$DB_PW@$DB_HOST:5432/$NEW_DB
-export STYLES_PATH=styles.csv
+export STYLES_PATH=/Users/jorge/Documents/worldmap_migrations/styles.csv
