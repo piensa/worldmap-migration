@@ -67,12 +67,13 @@ psql $NEW_DB -c "COPY base_topiccategory(id, identifier, description, gn_descrip
 
 #############################################################################
 
+#TODO: include layer_temporal_extents, and correct gazetteer migrations.
 echo "\nCopy items to layer table"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
-    'COPY (SELECT id, title, abstract, purpose, constraints_other, supplemental_information, data_quality_statement, workspace, store, "storeType", name, typename, name, false, false, false FROM augmented_maps_layer) to stdout with csv' | \
+    'COPY (SELECT id, title, abstract, purpose, constraints_other, supplemental_information, data_quality_statement, workspace, store, "storeType", name, typename, name, false, false, false, false FROM augmented_maps_layer) to stdout with csv' | \
 sudo -u $USER \
-psql $NEW_DB -c 'COPY layers_layer (resourcebase_ptr_id, title_en, abstract_en, purpose_en, constraints_other_en, supplemental_information_en, data_quality_statement_en, workspace, store, "storeType", name, typename, charset, is_mosaic, has_time, has_elevation) from stdin csv'
+psql $NEW_DB -c 'COPY layers_layer (resourcebase_ptr_id, title_en, abstract_en, purpose_en, constraints_other_en, supplemental_information_en, data_quality_statement_en, workspace, store, "storeType", name, typename, charset, is_mosaic, has_time, has_elevation, in_gazetteer) from stdin csv'
 
 #############################################################################
 
