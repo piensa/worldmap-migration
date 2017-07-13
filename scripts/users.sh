@@ -37,7 +37,16 @@ sudo -u $USER psql $NEW_DB -c \
         email, 
         is_staff,
         is_active,
-        date_joined)
+        date_joined,
+        organization,
+        position,
+        voice,
+        fax,
+        delivery,
+        city,
+        area,
+        zipcode,
+        country)
     FROM STDIN CSV"
 
 #############################################################################
