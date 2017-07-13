@@ -4,7 +4,7 @@
 
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
-    "COPY(SELECT auth_user.id,
+    "COPY(SELECT DISTINCT auth_user.id,
         auth_user.password,
         auth_user.last_login,
         auth_user.is_superuser,
