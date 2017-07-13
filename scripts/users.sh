@@ -4,18 +4,28 @@
 
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
-    "COPY(SELECT id,
-        password,
-        last_login,
-        is_superuser,
-        username,
-        first_name,
-        last_name,
-        email,
-        is_staff,
-        is_active,
-        date_joined
-    FROM auth_user) to stdout with csv" | \
+    "COPY(SELECT auth_user.id,
+        auth_user.password,
+        auth_user.last_login,
+        auth_user.is_superuser,
+        auth_user.username,
+        auth_user.first_name,
+        auth_user.last_name,
+        auth_user.email,
+        auth_user.is_staff,
+        auth_user.is_active,
+        auth_user.date_joined,
+        maps_contact.organization,
+        maps_contact.position,
+        maps_contact.voice,
+        maps_contact.fax,
+        maps_contact.delivery,
+        maps_contact.city,
+        maps_contact.area,
+        maps_contact.zipcode,
+        maps_contact.country
+    FROM auth_user, maps_contact
+    WHERE maps_contact.user_id = auth_user.id) to stdout with csv" | \
 sudo -u $USER psql $NEW_DB -c \
     "COPY people_profile (id,
         password,
