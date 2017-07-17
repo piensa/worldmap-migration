@@ -12,7 +12,7 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $NEW_DB -c \
 #############################################################################
 
 echo "\nStoring layer style into layers_layer_styles"; do_dash
-for layer in `psql -U worldmap worldmap_new -c 'copy(select name from layers_style) to stdout csv'`; do
+for layer in `sudo -u $USER PGPASSWORD=$DB_PW psql $NEW_DB -c 'copy(select name from layers_style) to stdout csv'`; do
     sudo -u $USER PGPASSWORD=$DB_PW \
     psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $NEW_DB -c \
         "INSERT INTO layers_layer_styles (layer_id, style_id)
