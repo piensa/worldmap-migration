@@ -34,7 +34,7 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
 #############################################################################
 
 echo "\nGet layers content type needed for polymorphic"; do_dash
-ID=$(sudo -u $USER psql $OLD_DB -c \
+ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
         SELECT id FROM django_content_type WHERE model LIKE 'layer')
     TO STDOUT WITH CSV")
