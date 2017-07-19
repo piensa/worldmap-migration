@@ -102,6 +102,22 @@ sudo -u $USER psql $NEW_DB -c \
 
 #############################################################################
 
+echo "\nCopy django_guardian permissions for anonymous user"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT DISTINCT -1,
+                        56,
+                        object_pk,
+                        169
+        FROM guardian_userobjectpermission
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV
+    "
+
+#############################################################################
+
 echo "\nCopy tagged items from maps"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(
