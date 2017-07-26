@@ -65,14 +65,11 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST -d $NEW_DB -c \
 
 #############################################################################
 do_hr
-echo "Executing geonode migrations"
+echo "Using tables dump to create tables"
 do_hr
 #############################################################################
 
-source $ENV_PATH/bin/activate
-python $GEONODE_PATH/manage.py makemigrations
-python $GEONODE_PATH/manage.py migrate account --noinput
-python $GEONODE_PATH/manage.py migrate
+sudo -u $USER PGPASSWORD=$DB_PW psql -q -d $NEW_DB < tables.sql
 
 #############################################################################
 do_hr
