@@ -1610,6 +1610,48 @@ CREATE TABLE documents_document (
 
 
 --
+-- Name: gazetteer_gazetteerentry; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE gazetteer_gazetteerentry (
+    id integer NOT NULL,
+    layer_name character varying(255) NOT NULL,
+    layer_attribute character varying(255) NOT NULL,
+    feature_type character varying(255) NOT NULL,
+    feature_fid bigint NOT NULL,
+    latitude double precision NOT NULL,
+    longitude double precision NOT NULL,
+    place_name text NOT NULL,
+    start_date text,
+    end_date text,
+    julian_start integer,
+    julian_end integer,
+    project character varying(255),
+    feature geometry(Geometry,4326),
+    username character varying(30)
+);
+
+
+--
+-- Name: gazetteer_gazetteerentry_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE gazetteer_gazetteerentry_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: gazetteer_gazetteerentry_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE gazetteer_gazetteerentry_id_seq OWNED BY gazetteer_gazetteerentry.id;
+
+
+--
 -- Name: groups_groupinvitation; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -3180,6 +3222,13 @@ ALTER TABLE ONLY djcelery_workerstate ALTER COLUMN id SET DEFAULT nextval('djcel
 -- Name: id; Type: DEFAULT; Schema: public; Owner: -
 --
 
+ALTER TABLE ONLY gazetteer_gazetteerentry ALTER COLUMN id SET DEFAULT nextval('gazetteer_gazetteerentry_id_seq'::regclass);
+
+
+--
+-- Name: id; Type: DEFAULT; Schema: public; Owner: -
+--
+
 ALTER TABLE ONLY groups_groupinvitation ALTER COLUMN id SET DEFAULT nextval('groups_groupinvitation_id_seq'::regclass);
 
 
@@ -3890,6 +3939,9 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 242	Can add endpoint	79	add_endpoint
 243	Can change endpoint	79	change_endpoint
 244	Can delete endpoint	79	delete_endpoint
+245	Can add gazetteer entry	80	add_gazetteerentry
+246	Can change gazetteer entry	80	change_gazetteerentry
+247	Can delete gazetteer entry	80	delete_gazetteerentry
 \.
 
 
@@ -3897,7 +3949,7 @@ COPY auth_permission (id, name, content_type_id, codename) FROM stdin;
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('auth_permission_id_seq', 244, true);
+SELECT pg_catalog.setval('auth_permission_id_seq', 247, true);
 
 
 --
@@ -4299,6 +4351,7 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 77	wm_extra	mapstats
 78	wm_extra	layerstats
 79	wm_extra	endpoint
+80	gazetteer	gazetteerentry
 \.
 
 
@@ -4306,7 +4359,7 @@ COPY django_content_type (id, app_label, model) FROM stdin;
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('django_content_type_id_seq', 79, true);
+SELECT pg_catalog.setval('django_content_type_id_seq', 80, true);
 
 
 --
@@ -4314,51 +4367,51 @@ SELECT pg_catalog.setval('django_content_type_id_seq', 79, true);
 --
 
 COPY django_migrations (id, app, name, applied) FROM stdin;
-1	sites	0001_initial	2017-07-26 15:54:47.890792+00
-2	contenttypes	0001_initial	2017-07-26 15:54:47.909091+00
-3	taggit	0001_initial	2017-07-26 15:54:47.959254+00
-4	taggit	0002_auto_20150616_2121	2017-07-26 15:54:47.974212+00
-5	contenttypes	0002_remove_content_type_name	2017-07-26 15:54:48.014744+00
-6	auth	0001_initial	2017-07-26 15:54:48.10603+00
-7	auth	0002_alter_permission_name_max_length	2017-07-26 15:54:48.131599+00
-8	auth	0003_alter_user_email_max_length	2017-07-26 15:54:48.156312+00
-9	auth	0004_alter_user_username_opts	2017-07-26 15:54:48.173427+00
-10	auth	0005_alter_user_last_login_null	2017-07-26 15:54:48.191566+00
-11	auth	0006_require_contenttypes_0002	2017-07-26 15:54:48.193806+00
-12	people	24_initial	2017-07-26 15:54:48.276975+00
-13	account	0001_initial	2017-07-26 15:54:48.5558+00
-14	account	0002_fix_emailconfirmation_created	2017-07-26 15:54:48.602389+00
-15	account	0003_auto_20160822_0917	2017-07-26 15:54:48.668608+00
-16	account	0004_auto_20170419_1410	2017-07-26 15:54:48.737753+00
-17	actstream	0001_initial	2017-07-26 15:55:01.825428+00
-18	actstream	0002_remove_action_data	2017-07-26 15:55:01.844078+00
-19	admin	0001_initial	2017-07-26 15:55:01.914628+00
-20	agon_ratings	0001_initial	2017-07-26 15:55:02.139151+00
-21	announcements	0001_initial	2017-07-26 15:55:02.267122+00
-22	avatar	0001_initial	2017-07-26 15:55:02.334229+00
-23	base	24_initial	2017-07-26 15:55:03.642867+00
-24	base	24_to_26	2017-07-26 15:55:04.519566+00
-25	base	0025_auto_20170719_1223	2017-07-26 15:55:04.657248+00
-26	dialogos	0001_initial	2017-07-26 15:55:04.782659+00
-27	djcelery	0001_initial	2017-07-26 15:55:05.081655+00
-28	documents	24_initial	2017-07-26 15:55:05.197755+00
-29	groups	24_initial	2017-07-26 15:55:06.319809+00
-30	guardian	0001_initial	2017-07-26 15:55:06.846249+00
-31	layers	24_initial	2017-07-26 15:55:08.116816+00
-32	layers	24_to_26	2017-07-26 15:55:09.14421+00
-33	layers	0025_auto_20170719_1223	2017-07-26 15:55:09.924651+00
-34	maps	24_initial	2017-07-26 15:55:10.446677+00
-35	oauth2_provider	0001_initial	2017-07-26 15:55:11.399284+00
-36	oauth2_provider	0002_08_updates	2017-07-26 15:55:11.958499+00
-37	oauth2_provider	0003_auto_20160316_1503	2017-07-26 15:55:12.132306+00
-38	oauth2_provider	0004_auto_20160525_1623	2017-07-26 15:55:12.694816+00
-39	services	24_initial	2017-07-26 15:55:13.935647+00
-40	sessions	0001_initial	2017-07-26 15:55:13.968471+00
-41	tastypie	0001_initial	2017-07-26 15:55:14.271406+00
-42	upload	24_initial	2017-07-26 15:55:14.904376+00
-43	user_messages	0001_initial	2017-07-26 15:55:15.718841+00
-44	wm_extra	0001_initial	2017-07-26 15:55:16.120955+00
-45	wm_extra	0002_endpoint	2017-07-26 15:55:16.342562+00
+1	sites	0001_initial	2017-08-08 16:15:53.948401+00
+2	contenttypes	0001_initial	2017-08-08 16:15:53.968331+00
+3	taggit	0001_initial	2017-08-08 16:15:54.028975+00
+4	taggit	0002_auto_20150616_2121	2017-08-08 16:15:54.041759+00
+5	contenttypes	0002_remove_content_type_name	2017-08-08 16:15:54.070396+00
+6	auth	0001_initial	2017-08-08 16:15:54.159855+00
+7	auth	0002_alter_permission_name_max_length	2017-08-08 16:15:54.188141+00
+8	auth	0003_alter_user_email_max_length	2017-08-08 16:15:54.20464+00
+9	auth	0004_alter_user_username_opts	2017-08-08 16:15:54.222609+00
+10	auth	0005_alter_user_last_login_null	2017-08-08 16:15:54.244491+00
+11	auth	0006_require_contenttypes_0002	2017-08-08 16:15:54.246547+00
+12	people	24_initial	2017-08-08 16:15:54.3117+00
+13	account	0001_initial	2017-08-08 16:15:54.595271+00
+14	account	0002_fix_emailconfirmation_created	2017-08-08 16:15:54.632038+00
+15	account	0003_auto_20160822_0917	2017-08-08 16:15:54.698069+00
+16	account	0004_auto_20170419_1410	2017-08-08 16:15:54.76456+00
+17	actstream	0001_initial	2017-08-08 16:16:18.403948+00
+18	actstream	0002_remove_action_data	2017-08-08 16:16:18.406434+00
+19	admin	0001_initial	2017-08-08 16:16:18.482677+00
+20	agon_ratings	0001_initial	2017-08-08 16:16:18.723113+00
+21	announcements	0001_initial	2017-08-08 16:16:18.845214+00
+22	avatar	0001_initial	2017-08-08 16:16:18.92902+00
+23	base	24_initial	2017-08-08 16:16:20.187023+00
+24	base	24_to_26	2017-08-08 16:16:21.027448+00
+25	base	0025_auto_20170719_1223	2017-08-08 16:16:21.171154+00
+26	dialogos	0001_initial	2017-08-08 16:16:21.295938+00
+27	djcelery	0001_initial	2017-08-08 16:16:21.54483+00
+28	documents	24_initial	2017-08-08 16:16:21.67035+00
+29	groups	24_initial	2017-08-08 16:16:22.759158+00
+30	guardian	0001_initial	2017-08-08 16:16:23.269728+00
+31	layers	24_initial	2017-08-08 16:16:24.586567+00
+32	layers	24_to_26	2017-08-08 16:16:25.599182+00
+33	layers	0025_auto_20170719_1223	2017-08-08 16:16:26.32513+00
+34	maps	24_initial	2017-08-08 16:16:26.810711+00
+35	oauth2_provider	0001_initial	2017-08-08 16:16:27.766266+00
+36	oauth2_provider	0002_08_updates	2017-08-08 16:16:28.298881+00
+37	oauth2_provider	0003_auto_20160316_1503	2017-08-08 16:16:28.473551+00
+38	oauth2_provider	0004_auto_20160525_1623	2017-08-08 16:16:29.034463+00
+39	services	24_initial	2017-08-08 16:16:30.277771+00
+40	sessions	0001_initial	2017-08-08 16:16:30.30909+00
+41	tastypie	0001_initial	2017-08-08 16:16:30.52068+00
+42	upload	24_initial	2017-08-08 16:16:30.949699+00
+43	user_messages	0001_initial	2017-08-08 16:16:32.009064+00
+44	wm_extra	0001_initial	2017-08-08 16:16:32.412293+00
+45	wm_extra	0002_endpoint	2017-08-08 16:16:32.632299+00
 \.
 
 
@@ -4482,6 +4535,21 @@ SELECT pg_catalog.setval('djcelery_workerstate_id_seq', 1, false);
 
 COPY documents_document (resourcebase_ptr_id, title_en, abstract_en, purpose_en, constraints_other_en, supplemental_information_en, data_quality_statement_en, object_id, doc_file, extension, doc_type, doc_url, content_type_id) FROM stdin;
 \.
+
+
+--
+-- Data for Name: gazetteer_gazetteerentry; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY gazetteer_gazetteerentry (id, layer_name, layer_attribute, feature_type, feature_fid, latitude, longitude, place_name, start_date, end_date, julian_start, julian_end, project, feature, username) FROM stdin;
+\.
+
+
+--
+-- Name: gazetteer_gazetteerentry_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('gazetteer_gazetteerentry_id_seq', 1, false);
 
 
 --
@@ -4745,7 +4813,7 @@ SELECT pg_catalog.setval('oauth2_provider_refreshtoken_id_seq', 1, false);
 --
 
 COPY people_profile (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined, organization, profile, "position", voice, fax, delivery, city, area, zipcode, country) FROM stdin;
--1		\N	f	AnonymousUser				f	t	2017-07-26 15:54:48.982862+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
+-1		\N	f	AnonymousUser				f	t	2017-08-08 16:15:55.037346+00	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N
 \.
 
 
@@ -5633,6 +5701,22 @@ ALTER TABLE ONLY djcelery_workerstate
 
 ALTER TABLE ONLY documents_document
     ADD CONSTRAINT documents_document_pkey PRIMARY KEY (resourcebase_ptr_id);
+
+
+--
+-- Name: gazetteer_gazetteerentry_layer_name_layer_attribute_feature_key; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY gazetteer_gazetteerentry
+    ADD CONSTRAINT gazetteer_gazetteerentry_layer_name_layer_attribute_feature_key UNIQUE (layer_name, layer_attribute, feature_fid);
+
+
+--
+-- Name: gazetteer_gazetteerentry_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY gazetteer_gazetteerentry
+    ADD CONSTRAINT gazetteer_gazetteerentry_pkey PRIMARY KEY (id);
 
 
 --
@@ -6773,6 +6857,13 @@ CREATE INDEX djcelery_workerstate_hostname_3900851044588416_like ON djcelery_wor
 --
 
 CREATE INDEX documents_document_417f1b1c ON documents_document USING btree (content_type_id);
+
+
+--
+-- Name: gazetteer_gazetteerentry_feature_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX gazetteer_gazetteerentry_feature_id ON gazetteer_gazetteerentry USING gist (feature);
 
 
 --
