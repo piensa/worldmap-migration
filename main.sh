@@ -133,6 +133,18 @@ source scripts/auth.sh
 
 #############################################################################
 do_hr
+echo "Gazetteer tables migration"
+do_hr
+#############################################################################
+
+sudo -u $USER PGPASSWORD=$DB_PW \
+psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST wmdata -c \
+    "copy (SELECT layer_name, layer_attribute, feature_type, feature_fid, latitude, longitude, place_name, start_date, end_date, julian_start, julian_end, project, feature, username FROM gazetteer_gazetteerentry) to stdout with csv;" | \
+sudo -u $USER \
+psql $NEW_DB -c "copy gazetteer_gazetteerentry(layer_name, layer_attribute, feature_type, feature_fid, latitude, longitude, place_name, start_date, end_date, julian_start, julian_end, project, feature, username) from stdin csv"
+
+#############################################################################
+do_hr
 echo "Migration for styles tables"
 do_hr
 #############################################################################
