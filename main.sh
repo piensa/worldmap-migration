@@ -160,17 +160,15 @@ echo "Migration for Harvard group"
 do_hr
 #############################################################################
 
+sudo -u $USER PGPASSWORD=$DB_PW \
+    psql -U $USER $NEW_DB -c "INSERT INTO auth_group(name) values('Harvard');"
+
 GROUP_ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
         SELECT id FROM auth_group where name='Harvard')
     TO STDOUT WITH CSV")
-
-sudo -u $USER PGPASSWORD=$DB_PW \
-    psql -U $USER NEW_DB -c "INSERT INTO auth_group(name) values('Harvard');"
-
 sudo -u $USER PGPASSWORD=$DB_PW  \
     psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
         "copy(SELECT user_id,$GROUP_ID FROM maps_contact WHERE is_harvard=true) to stdout with csv;" | \
-
 sudo -u $USER PGPASSWORD=$DB_PW  \
 psql $NEW_DB -c "copy people_profile_groups(profile_id,group_id) from stdin csv;"

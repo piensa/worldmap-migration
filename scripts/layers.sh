@@ -41,29 +41,29 @@ ID=$(sudo -u $USER psql $NEW_DB -c \
 
 #############################################################################
 
+echo "\nCopy items to base_topiccategory table"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW \
+psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
+    "COPY (SELECT id, title, name, description, true, 'fa-times' FROM maps_layercategory) TO STDOUT WITH CSV" | \
+sudo -u $USER \
+psql $NEW_DB -c "COPY base_topiccategory(id, identifier, description, gn_description, is_choice, fa_class) FROM stdin csv"
+
+#############################################################################
+
 echo "\nCopy items to resourcebase. Removing temporal extent fields
 from previous database works"; do_dash
 # ERROD: invalid input syntax for type timestamp with time zone: "0840"
 # PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, false, temporal_extent_start, temporal_extent_end from augmented_maps_layer) to stdout with csv" | psql $NEW_DB -c "copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, bbox_x0, bbox_y0, bbox_x1, bbox_y1, detail_url, metadata_uploaded_preserve, temporal_extent_start, temporal_extent_end) from stdin csv"
 sudo -u $USER PGPASSWORD=$DB_PW \
-psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, false from augmented_maps_layer) to stdout with csv" | \
+psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, false, topic_category_id from augmented_maps_layer) to stdout with csv" | \
 sudo -u $USER \
-psql $NEW_DB -c "copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, bbox_x0, bbox_y0, bbox_x1, bbox_y1, detail_url, metadata_uploaded_preserve) from stdin csv"
+psql $NEW_DB -c "copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, bbox_x0, bbox_y0, bbox_x1, bbox_y1, detail_url, metadata_uploaded_preserve, category_id) from stdin csv"
 
 #############################################################################
 
 echo "\nSet detail_url as /layers/typename"; do_dash
 sudo -u $USER psql $NEW_DB -c \
     "UPDATE base_resourcebase SET detail_url = '/layers/'||detail_url;"
-
-#############################################################################
-
-echo "\nCopy items to base_topiccategory table"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW \
-psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
-    "COPY (SELECT id, name, title, description, true, 'fa_class' FROM maps_layercategory) TO STDOUT WITH CSV" | \
-sudo -u $USER \
-psql $NEW_DB -c "COPY base_topiccategory(id, identifier, description, gn_description, is_choice, fa_class) FROM stdin csv"
 
 #############################################################################
 
