@@ -14,6 +14,10 @@ OLD_DB=worldmap
 for i in "$@"
 do
 case $i in
+    -d|--dump)
+    DUMP=true
+    shift # past argument with no value
+    ;;
     -t|--tables)
     TABLES=true
     shift # past argument with no value
@@ -22,7 +26,6 @@ case $i in
     OLD_DB="$2"
     shift # past argument
     ;;
-
     *)
             # unknown option
     ;;
@@ -64,12 +67,21 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST -d $NEW_DB -c \
 	"CREATE EXTENSION postgis;"
 
 #############################################################################
-do_hr
-echo "Using tables dump to create tables"
-do_hr
-#############################################################################
 
-sudo -u $USER PGPASSWORD=$DB_PW psql -q -d $NEW_DB < tables.sql
+if [ $DUMP ]; then
+    do_hr
+    echo "Using tables dump to create tables"
+    do_hr
+    sudo -u $USER PGPASSWORD=$DB_PW psql -q -d $NEW_DB < tables.sql
+else
+    do_hr
+    echo "Generating tables from django"
+    do_hr
+    source $ENV_PATH/bin/activate
+    python $GEONODE_PATH/manage.py makemigrations
+    python $GEONODE_PATH/manage.py migrate account --noinput
+    python $GEONODE_PATH/manage.py migrate
+fi
 
 #############################################################################
 do_hr
