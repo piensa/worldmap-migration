@@ -77,10 +77,12 @@ else
     do_hr
     echo "Generating tables from django"
     do_hr
-    source $ENV_PATH/bin/activate
-    python $GEONODE_PATH/manage.py makemigrations
-    python $GEONODE_PATH/manage.py migrate account --noinput
-    python $GEONODE_PATH/manage.py migrate
+
+    ssh wm-django-01 /bin/bash << EOF
+      source /home/ubuntu/wm.sh
+      python manage.py makemigrations
+      python manage.py migrate
+    EOF
 fi
 
 #############################################################################
