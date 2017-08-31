@@ -81,6 +81,7 @@ else
     ssh wm-django-01 /bin/bash << EOF
       source /home/ubuntu/wm.sh
       python manage.py makemigrations
+      python manage.py makemigrations datatables
       python manage.py migrate
     EOF
 fi
