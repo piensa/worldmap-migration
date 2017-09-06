@@ -135,7 +135,7 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
                $MAP_CT_ID as content_type_id
         FROM taggit_taggeditem,
              augmented_maps_map
-        WHERE taggit_taggeditem.object_id = augmented_maps_map.base_id
+        WHERE taggit_taggeditem.object_id = augmented_maps_map.id
         AND tag_id in (SELECT id from taggit_tag)
     ) to stdout with csv;" | \
 sudo -u $USER psql $NEW_DB -c \
@@ -149,6 +149,6 @@ echo "\nCopy certifications for maps"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(SELECT certifier_id, $MAP_CT_ID, augmented_maps_map.id as object_id
         FROM certification_certification, augmented_maps_map
-        WHERE certification_certification.object_id = augmented_maps_map.base_id) to stdout with csv;" | \
+        WHERE certification_certification.object_id = augmented_maps_map.id) to stdout with csv;" | \
 sudo -u $USER psql $NEW_DB -c \
     "copy certification_certification(certifier_id, object_ct_id, object_id) from stdin csv"
