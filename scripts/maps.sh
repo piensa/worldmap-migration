@@ -21,9 +21,9 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
 #############################################################################
 
 echo "\nGet maps content type needed for polymorphic"; do_dash
-ID=$(sudo -u $USER psql $NEW_DB -c \
+MAP_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
-        SELECT id FROM django_content_type WHERE model LIKE 'map')
+        SELECT id FROM django_content_type WHERE model='map')
     TO STDOUT WITH CSV")
 
 #############################################################################
@@ -31,7 +31,7 @@ ID=$(sudo -u $USER psql $NEW_DB -c \
 echo "\nCopying elements into resourcebase table"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW \
 psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
-	"copy (select base_id, $ID, 'uuid', owner_id, title, last_modified, 'date_type', abstract, 'eng', 'supplemental_information', 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, false, false, CONCAT('/maps/', base_id) from augmented_maps_map) to stdout with csv" | \
+	"copy (select base_id, $MAP_CT_ID, 'uuid', owner_id, title, last_modified, 'date_type', abstract, 'eng', 'supplemental_information', 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, false, false, CONCAT('/maps/', base_id) from augmented_maps_map) to stdout with csv" | \
 sudo -u $USER \
 psql $NEW_DB -c 'copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, metadata_uploaded_preserve, detail_url) from stdin csv'
 
@@ -82,10 +82,18 @@ psql $NEW_DB -c 'copy wm_extra_mapstats (visits, uniques, last_modified, map_id)
 
 #############################################################################
 
+echo "\nGet base content type needed for django_guardian"; do_dash
+BASE_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM django_content_type WHERE model='resourcebase')
+    TO STDOUT WITH CSV")
+
+#############################################################################
+
 echo "\nCopy django_guardian permissions"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
 	"copy(
-		SELECT user_id, 56, CAST(augmented_maps_map.base_id AS VARCHAR) as resourcebase_id,
+		SELECT user_id, $BASE_CT_ID, CAST(augmented_maps_map.base_id AS VARCHAR) as resourcebase_id,
 			CASE
 		    	WHEN role_id=1 THEN unnest(array[166, 169, 171])
 		    	WHEN role_id=2 THEN unnest(array[166, 167, 168, 169, 170, 171, 172, 173])
@@ -106,7 +114,7 @@ echo "\nCopy django_guardian permissions for anonymous user"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
     "copy(
         SELECT DISTINCT -1,
-                        56,
+                        $BASE_CT_ID,
                         object_pk,
                         169
         FROM guardian_userobjectpermission
@@ -124,7 +132,7 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
         SELECT taggit_taggeditem.id,
                taggit_taggeditem.tag_id,
                augmented_maps_map.id as object_id,
-               56 as content_type_id
+               $MAP_CT_ID as content_type_id
         FROM taggit_taggeditem,
              augmented_maps_map
         WHERE taggit_taggeditem.object_id = augmented_maps_map.base_id
@@ -134,3 +142,13 @@ sudo -u $USER psql $NEW_DB -c \
     "copy taggit_taggeditem(id, tag_id, object_id, content_type_id)
         FROM STDIN CSV
     "
+
+#############################################################################
+
+echo "\nCopy certifications for layers"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST worldmap_test -c \
+    "copy(SELECT certifier_id, $MAP_CT_ID, augmented_maps_layer.id as object_id
+    FROM certification_certification, augmented_maps_layer
+        WHERE certification_certification.object_id = augmented_maps_map.base_id) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c
+    "copy(certifier_id, object_ct_id, object_id) from stdin csv"

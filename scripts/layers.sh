@@ -33,10 +33,10 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
 
 #############################################################################
 
-echo "\nGet layers content type needed for polymorphic"; do_dash
-ID=$(sudo -u $USER psql $NEW_DB -c \
+echo "\nGet layers content type needed for polymorphic, taggit and certifications"; do_dash
+LAYER_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
-        SELECT id FROM django_content_type WHERE model LIKE 'layer')
+        SELECT id FROM django_content_type WHERE model='layer')
     TO STDOUT WITH CSV")
 
 #############################################################################
@@ -55,7 +55,7 @@ from previous database works"; do_dash
 # ERROD: invalid input syntax for type timestamp with time zone: "0840"
 # PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, false, temporal_extent_start, temporal_extent_end from augmented_maps_layer) to stdout with csv" | psql $NEW_DB -c "copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, bbox_x0, bbox_y0, bbox_x1, bbox_y1, detail_url, metadata_uploaded_preserve, temporal_extent_start, temporal_extent_end) from stdin csv"
 sudo -u $USER PGPASSWORD=$DB_PW \
-psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, typename, false, topic_category_id from augmented_maps_layer) to stdout with csv" | \
+psql -U $DB_USER -h $DB_HOST $OLD_DB -c "copy (select id, $LAYER_CT_ID, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, 'EPSG:4326', 'csw_typename', 'csw_schema', 'csw_mdsource', 'csw_type', 'csw_wkt_geometry', false, 0, 0, false, true, bbox_x0, bbox_y0, bbox_x1, bbox_y1, typename, typename, false, topic_category_id from augmented_maps_layer) to stdout with csv" | \
 sudo -u $USER \
 psql $NEW_DB -c "copy base_resourcebase (id, polymorphic_ctype_id, uuid, owner_id, title, date, date_type, abstract, language, supplemental_information, srid, csw_typename, csw_schema, csw_mdsource, csw_type, csw_wkt_geometry, metadata_uploaded, popular_count, share_count, featured, is_published, bbox_x0, bbox_y0, bbox_x1, bbox_y1, detail_url, alternate, metadata_uploaded_preserve, category_id) from stdin csv"
 
@@ -95,10 +95,16 @@ psql $NEW_DB -c "copy wm_extra_layerstats (layer_id, visits, uniques, downloads,
 
 #############################################################################
 
+echo "\nGet base content type needed for django_guardian"; do_dash
+BASE_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM django_content_type WHERE model='resourcebase')
+    TO STDOUT WITH CSV")
+
 echo "\nCopy django_guardian permissions"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(
-        SELECT user_id, 56, CAST(augmented_maps_layer.id AS VARCHAR) as resourcebase_id,
+        SELECT user_id, $BASE_CT_ID, CAST(augmented_maps_layer.id AS VARCHAR) as resourcebase_id,
             CASE
                 WHEN role_id=4 THEN unnest(array[166, 169, 171])
                 WHEN role_id=5 THEN unnest(array[166, 167, 168, 169, 170, 171, 172, 173])
@@ -121,7 +127,7 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
         SELECT taggit_taggeditem.id,
                taggit_taggeditem.tag_id,
                augmented_maps_layer.id as object_id,
-               56 as content_type_id
+               $LAYER_CT_ID as content_type_id
         FROM taggit_taggeditem,
              augmented_maps_layer
         WHERE taggit_taggeditem.object_id = augmented_maps_layer.id
@@ -131,3 +137,11 @@ sudo -u $USER psql $NEW_DB -c \
     "copy taggit_taggeditem(id, tag_id, object_id, content_type_id)
         FROM STDIN CSV
     "
+#############################################################################
+
+echo "\nCopy certifications for layers"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST worldmap_test -c \
+    "copy(SELECT certifier_id, $LAYER_CT_ID, augmented_maps_layer.id as object_id from certification_certification, augmented_maps_layer
+        WHERE certification_certification.object_id = augmented_maps_layer.id) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c
+    "copy(certifier_id, object_ct_id, object_id) from stdin csv"
