@@ -14,8 +14,8 @@ OLD_DB=worldmap
 for i in "$@"
 do
 case $i in
-    -d|--dump)
-    DUMP=true
+    -l|--local)
+    LOCAL=true
     shift # past argument with no value
     ;;
     -t|--tables)
@@ -68,22 +68,27 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST -d $NEW_DB -c \
 
 #############################################################################
 
-if [ $DUMP ]; then
-    do_hr
-    echo "Using tables dump to create tables"
-    do_hr
-    sudo -u $USER PGPASSWORD=$DB_PW psql -q -d $NEW_DB < tables.sql
-else
-    do_hr
-    echo "Generating tables from django"
-    do_hr
+if [ $LOCAL ]; then
+do_hr
+echo "Generating tables locally"
+do_hr
 
-    ssh wm-django-01 /bin/bash << EOF
-      source /home/ubuntu/wm.sh
-      python manage.py makemigrations
-      python manage.py makemigrations datatables
-      python manage.py migrate
-    EOF
+source $ENV_PATH/bin/activate
+python $GEONODE_PATH/manage.py makemigrations
+python $GEONODE_PATH/manage.py makemigrations datatables certification
+python $GEONODE_PATH/manage.py migrate
+
+else
+do_hr
+echo "Generating tables from django"
+do_hr
+
+ssh wm-django-01 /bin/bash << EOF
+  source /home/ubuntu/wm.sh
+  python manage.py makemigrations
+  python manage.py makemigrations datatables
+  python manage.py migrate
+EOF
 fi
 
 #############################################################################
@@ -94,16 +99,6 @@ do_hr
 
 source scripts/users.sh
 
-#############################################################################
-do_hr
-echo "Creating default user for Admin"
-do_hr
-#############################################################################
-
-
-echo "from geonode.people.models import Profile;
-     Profile.objects.create_superuser('admin', 'admin@worldmap.com', 'admin')" | \
-python $GEONODE_PATH/manage.py shell
 
 python $GEONODE_PATH/manage.py loaddata fixtures/default_oauth_apps.json
 

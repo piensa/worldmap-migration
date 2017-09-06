@@ -145,10 +145,10 @@ sudo -u $USER psql $NEW_DB -c \
 
 #############################################################################
 
-echo "\nCopy certifications for layers"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST worldmap_test -c \
+echo "\nCopy certifications for maps"; do_dash
+sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(SELECT certifier_id, $MAP_CT_ID, augmented_maps_layer.id as object_id
-    FROM certification_certification, augmented_maps_layer
+        FROM certification_certification, augmented_maps_map
         WHERE certification_certification.object_id = augmented_maps_map.base_id) to stdout with csv;" | \
-sudo -u $USER psql $NEW_DB -c
-    "copy(certifier_id, object_ct_id, object_id) from stdin csv"
+sudo -u $USER psql $NEW_DB -c \
+    "copy certification_certification(certifier_id, object_ct_id, object_id) from stdin csv"

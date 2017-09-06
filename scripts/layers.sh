@@ -137,11 +137,12 @@ sudo -u $USER psql $NEW_DB -c \
     "copy taggit_taggeditem(id, tag_id, object_id, content_type_id)
         FROM STDIN CSV
     "
+
 #############################################################################
 
 echo "\nCopy certifications for layers"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST worldmap_test -c \
+sudo -u $USER PGPASSWORD=$DB_PW psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(SELECT certifier_id, $LAYER_CT_ID, augmented_maps_layer.id as object_id from certification_certification, augmented_maps_layer
         WHERE certification_certification.object_id = augmented_maps_layer.id) to stdout with csv;" | \
-sudo -u $USER psql $NEW_DB -c
-    "copy(certifier_id, object_ct_id, object_id) from stdin csv"
+sudo -u $USER psql $NEW_DB -c \
+    "copy certification_certification(certifier_id, object_ct_id, object_id) from stdin csv"
