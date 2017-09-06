@@ -18,6 +18,10 @@ case $i in
     LOCAL=true
     shift # past argument with no value
     ;;
+    -s|--styles)
+    STYLES=true
+    shift # past argument with no value
+    ;;
     -t|--tables)
     TABLES=true
     shift # past argument with no value
@@ -159,8 +163,14 @@ echo "Migration for styles tables"
 do_hr
 #############################################################################
 
-if [ -f $STYLES_PATH ]; then
-    echo "Sql styles dump found..."
+if [ $STYLES ]; then
+    do_hr
+    echo "Get styles file from geoserver instance"
+    do_hr
+    # Removing previous styles file, if exists.
+    rm styles.csv
+
+    scp wm-geoserver:/home/ubuntu/scripts/styles.csv .
     source scripts/styles.sh
 fi
 
