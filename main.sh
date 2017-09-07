@@ -22,10 +22,6 @@ case $i in
     STYLES=true
     shift # past argument with no value
     ;;
-    -t|--tables)
-    TABLES=true
-    shift # past argument with no value
-    ;;
     -d|--database)
     OLD_DB="$2"
     shift # past argument
@@ -81,10 +77,10 @@ source $ENV_PATH/bin/activate
 python $GEONODE_PATH/manage.py makemigrations
 python $GEONODE_PATH/manage.py makemigrations datatables certification
 python $GEONODE_PATH/manage.py migrate
-
+python $GEONODE_PATH/manage.py loaddata $GEONODE_PATH/fixtures/default_oauth_apps.json
 else
 do_hr
-echo "Generating tables from django"
+echo "Generating tables from django server"
 do_hr
 
 ssh wm-django-01 /bin/bash << EOF
@@ -92,6 +88,7 @@ source /home/ubuntu/wm.sh
 python manage.py makemigrations
 python manage.py makemigrations datatables certification
 python manage.py migrate
+python manage.py loaddata fixtures/default_oauth_apps.json
 EOF
 fi
 
@@ -102,14 +99,6 @@ do_hr
 #############################################################################
 
 source scripts/users.sh
-
-
-python $GEONODE_PATH/manage.py loaddata fixtures/default_oauth_apps.json
-
-# If there are only tables creation only.
-if [ $TABLES ]; then
-    exit
-fi
 
 echo "\ntaggit_tag table migration"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
