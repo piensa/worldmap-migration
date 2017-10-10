@@ -91,13 +91,55 @@ BASE_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
 #############################################################################
 
 echo "\nCopy django_guardian permissions"; do_dash
+
+ADD_RESOURCE=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='add_resourcebase')
+    TO STDOUT WITH CSV")
+
+CHANGE_RESO=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='change_resourcebase')
+    TO STDOUT WITH CSV")
+
+DEL_RESOURCE=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='delete_resourcebase')
+    TO STDOUT WITH CSV")
+
+CAN_VIEW=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='view_resourcebase')
+    TO STDOUT WITH CSV")
+
+CHANGE_PERM=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='change_resourcebase_permissions')
+    TO STDOUT WITH CSV")
+
+DOWN_RESO=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='download_resourcebase')
+    TO STDOUT WITH CSV")
+
+PUBLISH_RESO=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='publish_resourcebase')
+    TO STDOUT WITH CSV")
+
+CHANGE_META=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='change_resourcebase_metadata')
+    TO STDOUT WITH CSV")
+
+
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
 	"copy(
 		SELECT user_id, $BASE_CT_ID, CAST(augmented_maps_map.base_id AS VARCHAR) as resourcebase_id,
 			CASE
-		    	WHEN role_id=1 THEN unnest(array[166, 169, 171])
-		    	WHEN role_id=2 THEN unnest(array[166, 167, 168, 169, 170, 171, 172, 173])
-				WHEN role_id=3 THEN unnest(array[166, 167, 169, 171, 172, 173])
+		    	WHEN role_id=1 THEN unnest(array[$ADD_RESOURCE, $CAN_VIEW, $DOWN_RESO])
+		    	WHEN role_id=2 THEN unnest(array[$ADD_RESOURCE, $CHANGE_RESO, $DEL_RESOURCE, $CAN_VIEW, $CHANGE_PERM, $DOWN_RESO, $PUBLISH_RESO, $CHANGE_META])
+				WHEN role_id=3 THEN unnest(array[$ADD_RESOURCE, $CHANGE_RESO, $CAN_VIEW, $DOWN_RESO, $PUBLISH_RESO, $CHANGE_META])
 		    END AS permission_id
 		FROM core_userobjectrolemapping, augmented_maps_map
 		WHERE augmented_maps_map.id = core_userobjectrolemapping.object_id
@@ -116,7 +158,7 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
         SELECT DISTINCT -1,
                         $BASE_CT_ID,
                         object_pk,
-                        169
+                        $CAN_VIEW
         FROM guardian_userobjectpermission
     ) to stdout with csv;" | \
 sudo -u $USER psql $NEW_DB -c \
