@@ -100,6 +100,11 @@ BASE_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
         SELECT id FROM django_content_type WHERE model='resourcebase')
     TO STDOUT WITH CSV")
+#Layer Content type ID
+LAYER_CT_ID=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM django_content_type WHERE model='layer')
+    TO STDOUT WITH CSV")
 ADD_RESOURCE=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
         SELECT id FROM auth_permission WHERE codename='add_resourcebase')
@@ -139,6 +144,16 @@ CHANGE_META=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
         SELECT id FROM auth_permission WHERE codename='change_resourcebase_metadata')
     TO STDOUT WITH CSV")
+CHANGE_STYLE=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='change_layer_style')
+    TO STDOUT WITH CSV")
+EDIT_LAYER_DT=$(sudo -u $USER psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_permission WHERE codename='change_layer_data')
+    TO STDOUT WITH CSV")
+
+#################################################################################
 echo "\nCopy django_guardian permissions"; do_dash
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
     "copy(
@@ -156,6 +171,35 @@ sudo -u $USER psql $NEW_DB -c \
     "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
         FROM STDIN CSV
     "
+### Change styles  permissions
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT 	base_resourcebase.owner_id,
+        		$LAYER_CT_ID,
+        		base_resourcebase.id,
+        		$CHANGE_STYLE    
+        FROM base_resourcebase,
+             layers_layer
+        WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV"
+
+### Edit layer data permissions
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT  base_resourcebase.owner_id,
+                        $LAYER_CT_ID,
+                        base_resourcebase.id,
+                        $EDIT_LAYER_DT    
+        FROM base_resourcebase,
+             layers_layer
+        WHERE layers_layer.resourcebase_ptr_id = base_resourcebase.id
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV"
 
 #############################################################################
 

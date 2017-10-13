@@ -153,19 +153,56 @@ sudo -u $USER psql $NEW_DB -c \
 #############################################################################
 
 echo "\nCopy django_guardian permissions for anonymous user"; do_dash
+
+#Anonymous user can see a map
+
 sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
     "copy(
         SELECT DISTINCT -1,
                         $BASE_CT_ID,
-                        object_pk,
+                        resourcebase_ptr_id,
                         $CAN_VIEW
-        FROM guardian_userobjectpermission
+        FROM maps_map
     ) to stdout with csv;" | \
 sudo -u $USER psql $NEW_DB -c \
     "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
         FROM STDIN CSV
     "
+#############################################################################
 
+echo "\n django_guardian permissions for registered users"; do_dash
+
+REGISTER_GP=$(sudo -u $USER  PGPASSWORD=$DB_PW  psql $NEW_DB -c \
+    "COPY (
+        SELECT id FROM auth_group where name='Registered users')
+    TO STDOUT WITH CSV")
+#can see a layer
+
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT          $REGISTER_GP,
+                        $BASE_CT_ID,
+                        resourcebase_ptr_id,
+                        $CAN_VIEW
+        FROM layers_layer
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_groupobjectpermission(group_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV
+    "
+#Can download layer
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT          $REGISTER_GP,
+                        $BASE_CT_ID,
+                        resourcebase_ptr_id,
+                        $DOWN_RESO
+        FROM layers_layer
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_groupobjectpermission(group_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV
+    "
 #############################################################################
 
 echo "\nCopy tagged items from maps"; do_dash
@@ -176,6 +213,7 @@ sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $OLD_DB -c \
                augmented_maps_map.id as object_id,
                $MAP_CT_ID as content_type_id
         FROM taggit_taggeditem,
+
              augmented_maps_map
         WHERE taggit_taggeditem.object_id = augmented_maps_map.id
         AND tag_id in (SELECT id from taggit_tag)
