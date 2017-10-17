@@ -168,6 +168,21 @@ sudo -u $USER psql $NEW_DB -c \
     "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
         FROM STDIN CSV
     "
+
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c \
+    "copy(
+        SELECT DISTINCT -1,
+                        $BASE_CT_ID,
+                        resourcebase_ptr_id,
+                        $DOWN_RESO
+        FROM maps_map
+    ) to stdout with csv;" | \
+sudo -u $USER psql $NEW_DB -c \
+    "copy guardian_userobjectpermission(user_id, content_type_id, object_pk, permission_id)
+        FROM STDIN CSV
+    "
+
+
 #############################################################################
 
 echo "\n django_guardian permissions for registered users"; do_dash
