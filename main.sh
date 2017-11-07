@@ -74,8 +74,7 @@ echo "Generating tables locally"
 do_hr
 
 source $ENV_PATH/bin/activate
-python $GEONODE_PATH/manage.py makemigrations
-python $GEONODE_PATH/manage.py makemigrations datatables certification
+python $GEONODE_PATH/manage.py makemigrations --noinput
 python $GEONODE_PATH/manage.py migrate
 # python $GEONODE_PATH/manage.py loaddata $GEONODE_PATH/fixtures/default_oauth_apps.json
 else
@@ -84,9 +83,11 @@ echo "Generating tables from django server"
 do_hr
 
 ssh wm-django-01 /bin/bash << EOF
-source /home/ubuntu/wm.sh
+cd /home/ubuntu/wayner
+source wm.sh
 python manage.py makemigrations
 python manage.py migrate
+python manage.py loaddata fixtures/worldmap_category.json
 # python manage.py loaddata fixtures/default_oauth_apps.json
 EOF
 fi
@@ -145,7 +146,6 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST wmdata -c \
 sudo -u $USER \
 psql $NEW_DB -c "copy gazetteer_gazetteerentry(layer_name, layer_attribute, feature_type, feature_fid, latitude, longitude, place_name, start_date, end_date, julian_start, julian_end, project, feature, username) from stdin csv"
 
-
 #############################################################################
 do_hr
 echo "Migration for styles tables"
@@ -162,8 +162,6 @@ if [ $STYLES ]; then
     scp wm-geoserver:/home/ubuntu/scripts/styles.csv .
     source scripts/styles.sh
 fi
-
-
 #############################################################################
 do_hr
 echo "Dataverse and datatables migration"

@@ -23,9 +23,8 @@ psql -v ON_ERROR_STOP=1 -U $DB_USER -h $DB_HOST $OLD_DB -c \
         maps_contact.city,
         maps_contact.area,
         maps_contact.zipcode,
-        maps_contact.country,
-        maps_contact.is_certifier
-    FROM auth_user, maps_contact
+        maps_contact.country
+        FROM auth_user, maps_contact
     WHERE maps_contact.user_id = auth_user.id) to stdout with csv" | \
 sudo -u $USER psql $NEW_DB -c \
     "COPY people_profile (id,
@@ -47,8 +46,7 @@ sudo -u $USER psql $NEW_DB -c \
         city,
         area,
         zipcode,
-        country,
-        is_certifier)
+        country)
     FROM STDIN CSV"
 
 #############################################################################
