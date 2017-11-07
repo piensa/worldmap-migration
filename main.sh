@@ -85,7 +85,6 @@ do_hr
 ssh wm-django-01 /bin/bash << EOF
 cd /home/ubuntu/wayner
 source wm.sh
-python manage.py makemigrations
 python manage.py migrate
 python manage.py loaddata fixtures/worldmap_category.json
 # python manage.py loaddata fixtures/default_oauth_apps.json
