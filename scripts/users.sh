@@ -58,7 +58,11 @@ sudo -u $USER psql $NEW_DB -c \
     FROM people_profile;"
 #############################################################################
 echo "\nAuth_group table migration"; do_dash
-sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c "UPDATE auth_group SET name = 'beta-users' WHERE id=1; INSERT INTO auth_group (name) VALUES ('dataverse');  INSERT INTO auth_group (name) VALUES ('anonymous');"
+sudo -u $USER PGPASSWORD=$DB_PW psql -U $DB_USER -h $DB_HOST $NEW_DB -c "UPDATE auth_group SET name = 'beta-users' WHERE id=1; UPDATE auth_group SET name = 'dataverse' WHERE id=2; INSERT INTO auth_group (name,id) VALUES ('anonymous','3');"
+
+sudo -u $USER PGPASSWORD=$DB_PW \
+    psql -U $USER $NEW_DB -c "INSERT INTO auth_group (name,id) VALUES ('Registered users','4');"
+
 
 #############################################################################
 do_hr
@@ -66,7 +70,7 @@ echo "Migration for registered users"
 do_hr
 #############################################################################
 sudo -u $USER PGPASSWORD=$DB_PW \
-    psql -U $USER $NEW_DB -c "INSERT INTO auth_group(name) values('Registered users');"
+    psql -U $USER $NEW_DB -c "UPDATE auth_group SET id=4 WHERE name='Registered users';"
 
 REGISTER_GP=$(sudo -u $USER  PGPASSWORD=$DB_PW  psql $NEW_DB -c \
     "COPY (
@@ -98,7 +102,7 @@ do_hr
 #############################################################################
 
 sudo -u $USER PGPASSWORD=$DB_PW \
-    psql -U $USER $NEW_DB -c "INSERT INTO auth_group(name) values('Harvard');"
+    psql -U $USER $NEW_DB -c "INSERT INTO auth_group(name,id) values('Harvard','5');"
 
 GROUP_ID=$(sudo -u $USER psql $NEW_DB -c \
     "COPY (
